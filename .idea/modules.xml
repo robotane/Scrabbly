@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Scrabbly/Scrabbly.iml" filepath="$PROJECT_DIR$/Scrabbly/Scrabbly.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Scrabbly-android/Scrabbly-android.iml" filepath="$PROJECT_DIR$/Scrabbly-android/Scrabbly-android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Scrabbly-desktop/Scrabbly-desktop.iml" filepath="$PROJECT_DIR$/Scrabbly-desktop/Scrabbly-desktop.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Scrabbly-html/Scrabbly-html.iml" filepath="$PROJECT_DIR$/Scrabbly-html/Scrabbly-html.iml" />
+    </modules>
+  </component>
+</project>
