@@ -17,16 +17,16 @@ public class Assets implements Disposable, AssetErrorListener {
 
     public static final String TAG = Assets.class.getName();
     public static final Assets instance = new Assets();
-	private AssetManager assetManager;
+    public AssetPiece piece;
+    public BoardTile boardTile;
+    public AssetFonts fonts;
+    private AssetManager assetManager;
 
-	public AssetPiece piece;
-	public BoardTile boardTile;
-	public AssetFonts fonts;
-
-	private Assets(){}
+    private Assets() {
+    }
 
 
-    public void init (AssetManager assetManager) {
+    public void init(AssetManager assetManager) {
         this.assetManager = assetManager;
         // set asset manager error handler
         assetManager.setErrorListener(this);
@@ -62,18 +62,18 @@ public class Assets implements Disposable, AssetErrorListener {
     @Override
     public void dispose() {
 
-	    assetManager.dispose();
-	    fonts.defaultSmall.dispose();
-		fonts.defaultNormal.dispose();
-		fonts.defaultBig.dispose();
+        assetManager.dispose();
+        fonts.defaultSmall.dispose();
+        fonts.defaultNormal.dispose();
+        fonts.defaultBig.dispose();
     }
 
-    public class AssetFonts {
+    public static class AssetFonts {
         public final BitmapFont defaultSmall;
         public final BitmapFont defaultNormal;
         public final BitmapFont defaultBig;
 
-        public AssetFonts () {
+        public AssetFonts() {
             // create three fonts using Libgdx's 15px bitmap font
             defaultSmall = new BitmapFont(Gdx.files.internal("images/arial-15.fnt"), true);
             defaultNormal = new BitmapFont(Gdx.files.internal("images/arial-15.fnt"), true);
@@ -90,20 +90,32 @@ public class Assets implements Disposable, AssetErrorListener {
     }
 
     public static class AssetPiece {
-	    public final AtlasRegion black;
-	    public final AtlasRegion white;
-	    public final AtlasRegion yellow;
-	    public final AtlasRegion green;
-	    public final AtlasRegion purple;
-	    public final AtlasRegion orange;
+        public final AtlasRegion black;
+        public final AtlasRegion black_alt;
+        public final AtlasRegion white;
+        public final AtlasRegion white_alt;
+        public final AtlasRegion yellow;
+        public final AtlasRegion yellow_alt;
+        public final AtlasRegion green;
+        public final AtlasRegion green_alt;
+        public final AtlasRegion purple;
+        public final AtlasRegion purple_alt;
+        public final AtlasRegion orange;
+        public final AtlasRegion orange_alt;
 
         public AssetPiece(TextureAtlas atlas) {
             black = atlas.findRegion("black_piece");
+            black_alt = atlas.findRegion("black_piece_alt");
             white = atlas.findRegion("white_piece");
+            white_alt = atlas.findRegion("white_piece_alt");
             orange = atlas.findRegion("orange_piece");
+            orange_alt = atlas.findRegion("orange_piece_alt");
             green = atlas.findRegion("green_piece");
+            green_alt = atlas.findRegion("green_piece_alt");
             purple = atlas.findRegion("purple_piece");
+            purple_alt = atlas.findRegion("purple_piece_alt");
             yellow = atlas.findRegion("yellow_piece");
+            yellow_alt = atlas.findRegion("yellow_piece_alt");
         }
     }
 

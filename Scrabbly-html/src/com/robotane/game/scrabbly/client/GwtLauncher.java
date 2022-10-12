@@ -16,4 +16,9 @@ public class GwtLauncher extends GwtApplication {
 	public ApplicationListener getApplicationListener () {
 		return new ScrabblyGame();
 	}
+
+	@Override
+	public ApplicationListener createApplicationListener() {
+		return getApplicationListener ();
+	}
 }

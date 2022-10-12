@@ -527,7 +527,7 @@ public class BaseActor extends Group {
     /**
      * Set world dimensions for use by methods boundToWorld() and scrollTo().
      *
-     * @param BaseActor whose size determines the world bounds (typically a background image)
+     * @param referenceActor whose size determines the world bounds (typically a background image)
      */
     public static void setWorldBounds(BaseActor referenceActor) {
         setWorldBounds(referenceActor.getWidth(), referenceActor.getHeight());
