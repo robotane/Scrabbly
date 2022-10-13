@@ -14,7 +14,6 @@ import com.robotane.game.scrabbly.game.Board;
 import com.robotane.game.scrabbly.util.Constants;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class Piece extends BaseActor {
     public Vector2 posOnBoard;
@@ -131,7 +130,7 @@ public class Piece extends BaseActor {
                         if (board.showMoves) board.unMarkValidMoves();
                     }
                     board.selectedPiece = newPiece;
-                    ArrayList<Vector2> allTakingMoves = board.getAllTakingPos();
+                    ArrayList<Vector2> allTakingMoves = board.getAllTakingOriginPos();
                     boolean canBeSelected = (allTakingMoves.isEmpty() && board.currentPlayer.color == board.selectedPiece.type) || allTakingMoves.contains(board.selectedPiece.posOnBoard);
                     if (canBeSelected){
                         board.selectedPiece.setSelected(true);
@@ -139,7 +138,9 @@ public class Piece extends BaseActor {
                         if (board.showMoves && board.currentPlayer.color == board.selectedPiece.type)
                             board.markValidMoves();
                     }
-//                Gdx.app.log(TAG, board.selectedPiece.type.name());
+                Gdx.app.log(TAG, board.selectedPiece.type.name());
+                Gdx.app.log(TAG, allTakingMoves.toString());
+                Gdx.app.log(TAG, Boolean.toString(canBeSelected));
                 }
 
                 return false;

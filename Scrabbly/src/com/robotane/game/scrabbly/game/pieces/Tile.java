@@ -24,12 +24,12 @@ public class Tile extends BaseActor {
         super(x * Constants.PIECES_ZOOM, y * Constants.PIECES_ZOOM , stage);
         posOnBoard = new Vector2(x, y);
         this.type = type;
-        init();
+        init();  // TODO
     }
 
-    public Tile(float x, float y, Stage stage, PieceType type, Board board) {
+    public Tile(float x, float y, Stage stage, PieceType type, Board board) { // TODO
         this(x, y, stage, type);
-        this.board = board;
+        this.board = board;  // TODO
     }
 
     @Override

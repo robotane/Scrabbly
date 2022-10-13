@@ -23,12 +23,12 @@ public class Board extends BaseActor {
     public Piece selectedPiece;
     public boolean selectTarget;
     public boolean selectPiece;
-    public Player[] players; // TODO Use 'public Player[] players' instead and some constants like LIGHT_PLAYER=0,  DARK_PLAYER=1
+    public Player[] players;
     public final int LIGHT_PLAYER=0;
     public final int DARK_PLAYER=1;
     public Player currentPlayer;
     public boolean showMoves;
-
+    // TODO Comment every method in this so big class
     public Board(float x, float y, Stage stage) {
         super(x, y, stage);
         init();
@@ -109,10 +109,42 @@ public class Board extends BaseActor {
         return isValidRow(row) && isValidCol(col);
     }
 
-    public Map<Vector2, Vector2> getValidMovesFrom(Vector2 from, ArrayList<Vector2> takenPos, boolean all) {
+    private int getNextForward(PieceType type, int currentPos){
+        return type == PieceType.WHITE? currentPos + 1: currentPos - 1;
+    }
+
+    private int getNextBackward(PieceType type, int currentPos){
+        return type == PieceType.WHITE? currentPos - 1: currentPos + 1;
+    }
+
+    private int getNextLeft(PieceType type, int currentPos){
+        return currentPos - 1;
+    }
+
+    private int getNextRight(PieceType type, int currentPos){
+        return currentPos + 1;
+    }
+
+    private int getNextForward(int currentPos){
+        return getNextForward(selectedPiece.type, currentPos);
+    }
+
+    private int getNextBackward(int currentPos){
+        return getNextBackward(selectedPiece.type, currentPos);
+    }
+
+    private int getNextLeft(int currentPos){
+        return getNextLeft(selectedPiece.type, currentPos);
+    }
+
+    private int getNextRight(int currentPos){
+        return getNextRight(selectedPiece.type, currentPos);
+    }
+
+    public Map<Vector2, ArrayList<Vector2>> getValidMovesFromOff(Vector2 from, PieceType type, boolean isKing, ArrayList<Vector2> takenPos, boolean all) {
         int fromX = (int) from.x;
         int fromY = (int) from.y;
-        Map<Vector2, Vector2> validMoves = new HashMap<>();
+        Map<Vector2, ArrayList<Vector2>> validMoves = new HashMap<>();
 
         int oneForward;
         int oneBackward;
@@ -130,7 +162,7 @@ public class Board extends BaseActor {
         twoLeft = fromX - 2;
         twoRight = fromX + 2;
 
-        if (selectedPiece.type == PieceType.WHITE) {
+        if (type == PieceType.WHITE) {
             oneForward = fromY + 1;
             oneBackward = fromY - 1;
             twoForward = fromY + 2;
@@ -147,161 +179,245 @@ public class Board extends BaseActor {
 
         // FORWARD LEFT
         if (isValidRowCol(oneLeft, oneForward)) {
-            if (!hasPieceAt(oneLeft, oneForward)) {
-                if (selectedPiece.isKing){
-                    Vector2 nextPosition = new Vector2(oneLeft, oneForward);
-                    validMoves.put(nextPosition, null);
-                    if ((selectedPiece.type == PieceType.WHITE && oneLeft != 0 && oneForward != Constants.COLS - 1)
-                        ||(selectedPiece.type == PieceType.BLACK && oneLeft != 0 && oneForward != 0))
-                        validMoves.putAll(getValidMovesFrom(nextPosition, takenPos, all));
-                }
-                else if (takenPos.isEmpty())
-                    validMoves.put(new Vector2(oneLeft, oneForward), null);
-            } else if (getPieceAt(oneLeft, oneForward).type == opponentType
-                    && !takenPos.contains(getPieceAt(oneLeft, oneForward).posOnBoard)) {
-                if (isValidRowCol(twoLeft, twoForward)) {
-                    if (!hasPieceAt(twoLeft, twoForward)) {
-                        Vector2 newTargetPos = new Vector2(twoLeft, twoForward);
-                        Vector2 newTakenPos = new Vector2(oneLeft, oneForward);
-                        validMoves.put(newTargetPos, newTakenPos);
-                        takenPos.add(newTakenPos);
-                        if (all) validMoves.putAll(getValidMovesFrom(newTargetPos, takenPos, all));
+            if (isKing || !hasPieceAt(oneLeft, oneForward)) {
+                if (isKing){
+                    int currentX = oneLeft, nextX;
+                    int currentY = oneForward, nextY;
+                    ArrayList<Vector2> takenPieces = new ArrayList<>();
+                    while (isValidRowCol(currentX, currentY)) {
+                        if (!hasPieceAt(currentX, currentY)){
+                            validMoves.put(new Vector2(currentX, currentY), new ArrayList<>(takenPieces));
+                        }
+                        else {
+                            if (getPieceAt(currentX, currentY).type == opponentType){
+                                nextX = getNextLeft(currentX);
+                                nextY = getNextForward(currentY);
+                                if (kingTaking(takenPos, validMoves, currentX, nextX, currentY, nextY, takenPieces))
+                                    break;
+                            }
+                            else break;
+                        }
+                        currentX = getNextLeft(currentX);
+                        currentY = getNextForward(currentY);
                     }
                 }
+                else if (takenPos.isEmpty())
+                    validMoves.putIfAbsent(new Vector2(oneLeft, oneForward), new ArrayList<>());
+            } else {
+                takingForward(type, isKing, takenPos, all, validMoves, oneForward, oneLeft, twoForward, twoLeft, opponentType);
             }
         }
 
         // FORWARD RIGHT
         if (isValidRowCol(oneRight, oneForward)) {
-            if (!hasPieceAt(oneRight, oneForward)) {
-                if (selectedPiece.isKing){
-                    Vector2 nextPosition = new Vector2(oneRight, oneForward);
-                    validMoves.put(nextPosition, null);
-                    if ((selectedPiece.type == PieceType.WHITE && oneRight != Constants.ROWS - 1 && oneForward != Constants.COLS - 1)
-                        ||(selectedPiece.type == PieceType.BLACK && oneRight != Constants.ROWS - 1 && oneForward != 0))
-                        validMoves.putAll(getValidMovesFrom(nextPosition, takenPos, all));
-                }
-                if (takenPos.isEmpty())
-                    validMoves.put(new Vector2(oneRight, oneForward), null);
-            } else if (getPieceAt(oneRight, oneForward).type == opponentType
-                    && !takenPos.contains(getPieceAt(oneRight, oneForward).posOnBoard)) {
-                if (isValidRowCol(twoRight, twoForward)) {
-                    if (!hasPieceAt(twoRight, twoForward)) {
-                        Vector2 newTargetPos = new Vector2(twoRight, twoForward);
-                        Vector2 newTakenPos = new Vector2(oneRight, oneForward);
-                        validMoves.put(newTargetPos, newTakenPos);
-                        takenPos.add(newTakenPos);
-                        if (all) validMoves.putAll(getValidMovesFrom(newTargetPos, takenPos, all));
+            if (isKing || !hasPieceAt(oneRight, oneForward)) {
+                if (isKing){
+                    int currentX = oneRight, nextX;
+                    int currentY = oneForward, nextY;
+                    ArrayList<Vector2> takenPieces = new ArrayList<>();
+                    while (isValidRowCol(currentX, currentY)) {
+                        if (!hasPieceAt(currentX, currentY)){
+                            validMoves.put(new Vector2(currentX, currentY), new ArrayList<>(takenPieces));
+                        }
+                        else {
+                            if (getPieceAt(currentX, currentY).type == opponentType){
+                                nextX = getNextRight(currentX);
+                                nextY = getNextForward(currentY);
+                                if (kingTaking(takenPos, validMoves, currentX, nextX, currentY, nextY, takenPieces))
+                                    break;
+                            }
+                            else break;
+                        }
+                        currentX = getNextRight(currentX);
+                        currentY = getNextForward(currentY);
                     }
                 }
-            }
+                if (takenPos.isEmpty())
+                    validMoves.putIfAbsent(new Vector2(oneRight, oneForward), new ArrayList<>());
+            } else
+                takingForward(type, isKing, takenPos, all, validMoves, oneForward, oneRight, twoForward, twoRight, opponentType);
         }
 
         // BACKWARD RIGHT
         if (isValidRowCol(oneRight, oneBackward)) {
-            if (!hasPieceAt(oneRight, oneBackward) && selectedPiece.isKing){
-                Vector2 nextPosition = new Vector2(oneRight, oneBackward);
-                validMoves.put(nextPosition, null);
-                if ((selectedPiece.type == PieceType.WHITE && oneRight != Constants.ROWS - 1 && oneBackward != 0)
-                    ||(selectedPiece.type == PieceType.BLACK && oneRight != Constants.ROWS - 1 && oneBackward != Constants.COLS - 1))
-                    validMoves.putAll(getValidMovesFrom(nextPosition, takenPos, all));
-            }
-            else if (hasPieceAt(oneRight, oneBackward) && getPieceAt(oneRight, oneBackward).type == opponentType
-                    && !takenPos.contains(getPieceAt(oneRight, oneBackward).posOnBoard)) {
-                if (isValidRowCol(twoRight, twoBackward)) {
-                    if (!hasPieceAt(twoRight, twoBackward)) {
-                        Vector2 newTargetPos = new Vector2(twoRight, twoBackward);
-                        Vector2 newTakenPos = new Vector2(oneRight, oneBackward);
-                        validMoves.put(newTargetPos, newTakenPos);
-                        takenPos.add(newTakenPos);
-                        if (all) validMoves.putAll(getValidMovesFrom(newTargetPos, takenPos, all));
+            if (isKing){
+                int currentX = oneRight, nextX;
+                int currentY = oneBackward, nextY;
+                ArrayList<Vector2> takenPieces = new ArrayList<>();
+                while (isValidRowCol(currentX, currentY)) {
+                    if (!hasPieceAt(currentX, currentY)){
+                        validMoves.put(new Vector2(currentX, currentY), new ArrayList<>(takenPieces));
                     }
+                    else {
+                        if (getPieceAt(currentX, currentY).type == opponentType) {
+                            nextX = getNextRight(currentX);
+                            nextY = getNextBackward(currentY);
+                            if (kingTaking(takenPos, validMoves, currentX, nextX, currentY, nextY, takenPieces))
+                                break;
+                        }
+                        else break;
+                    }
+                    currentX = getNextRight(currentX);
+                    currentY = getNextBackward(currentY);
                 }
+            }
+            else {
+                takingBackward(type, isKing, takenPos, all, validMoves, oneBackward, oneRight, twoBackward, twoRight, opponentType);
             }
         }
 
         // BACKWARD LEFT
         if (isValidRowCol(oneLeft, oneBackward)) {
-            if (!hasPieceAt(oneLeft, oneBackward) && selectedPiece.isKing){
-                Vector2 nextPosition = new Vector2(oneLeft, oneBackward);
-                validMoves.put(nextPosition, null);
-                if ((selectedPiece.type == PieceType.WHITE && oneLeft != 0 && oneBackward != 0)
-                    ||(selectedPiece.type == PieceType.BLACK && oneLeft != 0 && oneBackward != Constants.COLS - 1))
-                    validMoves.putAll(getValidMovesFrom(nextPosition, takenPos, all));
-            }
-            else if (hasPieceAt(oneLeft, oneBackward) && getPieceAt(oneLeft, oneBackward).type == opponentType
-                    && !takenPos.contains(getPieceAt(oneLeft, oneBackward).posOnBoard)) {
-                if (isValidRowCol(twoLeft, twoBackward)) {
-                    if (!hasPieceAt(twoLeft, twoBackward)) {
-                        Vector2 newTargetPos = new Vector2(twoLeft, twoBackward);
-                        Vector2 newTakenPos = new Vector2(oneLeft, oneBackward);
-                        validMoves.put(newTargetPos, newTakenPos);
-                        takenPos.add(newTakenPos);
-                        if (all) validMoves.putAll(getValidMovesFrom(newTargetPos, takenPos, all));
+            if (isKing){
+                int currentX = oneLeft, nextX;
+                int currentY = oneBackward, nextY;
+                ArrayList<Vector2> takenPieces = new ArrayList<>();
+                while (isValidRowCol(currentX, currentY)) {
+                    if (!hasPieceAt(currentX, currentY)){
+                        validMoves.put(new Vector2(currentX, currentY), new ArrayList<>(takenPieces));
                     }
+                    else {
+                        if (getPieceAt(currentX, currentY).type == opponentType) {
+                            nextX = getNextLeft(currentX);
+                            nextY = getNextBackward(currentY);
+                            if (kingTaking(takenPos, validMoves, currentX, nextX, currentY, nextY, takenPieces))
+                                break;
+                        }
+                        else break;
+                    }
+                    currentX = getNextLeft(currentX);
+                    currentY = getNextBackward(currentY);
                 }
             }
+            else
+                takingBackward(type, isKing, takenPos, all, validMoves, oneBackward, oneLeft, twoBackward, twoLeft, opponentType);
         }
 
-        Map<Vector2, Vector2> takingMoves = getTakingMoves(validMoves);
+        Map<Vector2, ArrayList<Vector2>> takingMoves = getTakingTargetPos(validMoves);
         return takingMoves.isEmpty() ? validMoves : takingMoves;
     }
 
-    public Map<Vector2, Vector2> getTakingMoves(Map<Vector2, Vector2> validMoves) {
-        Map<Vector2, Vector2> takingMoves = new HashMap<>();
+    private boolean kingTaking(ArrayList<Vector2> takenPos, Map<Vector2, ArrayList<Vector2>> validMoves, int currentX, int nextX, int currentY, int nextY, ArrayList<Vector2> takenPieces) {
+        if (isValidRowCol(nextX, nextY)){
+            if (!hasPieceAt(nextX, nextY)) {
+                Vector2 newTargetPos = new Vector2(nextX, nextY);
+                Vector2 newTakenPos = new Vector2(currentX, currentY);
+                takenPos.add(newTakenPos);
+                takenPieces.add(newTakenPos);
+                validMoves.put(newTargetPos, new ArrayList<>(takenPieces));
+            }
+            else return true;
+        }
+        return false;
+    }
+
+    private void takingBackward(PieceType type, boolean isKing, ArrayList<Vector2> takenPos, boolean all, Map<Vector2, ArrayList<Vector2>> validMoves, int oneBackward, int oneRight, int twoBackward, int twoRight, PieceType opponentType) {
+        if (hasPieceAt(oneRight, oneBackward) && getPieceAt(oneRight, oneBackward).type == opponentType
+                && !takenPos.contains(getPieceAt(oneRight, oneBackward).posOnBoard)) {
+            taking(type, isKing, takenPos, all, validMoves, oneBackward, oneRight, twoBackward, twoRight);
+        }
+    }
+
+    private void taking(PieceType type, boolean isKing, ArrayList<Vector2> takenPos, boolean all, Map<Vector2, ArrayList<Vector2>> validMoves, int currentY, int currentX, int nextY, int nextX) {
+        if (isValidRowCol(nextX, nextY)) {
+            if (!hasPieceAt(nextX, nextY)) {
+                Vector2 newTargetPos = new Vector2(nextX, nextY);
+                Vector2 newTakenPos = new Vector2(currentX, currentY);
+                takenPos.add(newTakenPos);
+//                validMoves.put(newTargetPos, takenPos);
+                validMoves.compute(newTargetPos, (k, v) -> {
+                    if (v == null){
+                        v = new ArrayList<>();
+                    }
+                    v.add(newTakenPos);
+                    return v;
+                });
+                if ((type == PieceType.WHITE && newTargetPos.y == Constants.COLS - 1) || (type == PieceType.BLACK && newTargetPos.y == 0)) {
+                    isKing = true;
+                }
+                if (all) validMoves.putAll(getValidMovesFromOff(newTargetPos, type, isKing, takenPos, all));
+            }
+        }
+    }
+
+    private void takingForward(PieceType type, boolean isKing, ArrayList<Vector2> takenPos, boolean all, Map<Vector2, ArrayList<Vector2>> validMoves, int oneForward, int oneLeft, int twoForward, int twoLeft, PieceType opponentType) {
+        if (getPieceAt(oneLeft, oneForward).type == opponentType
+                && !takenPos.contains(getPieceAt(oneLeft, oneForward).posOnBoard)) {
+            taking(type, isKing, takenPos, all, validMoves, oneForward, oneLeft, twoForward, twoLeft);
+        }
+    }
+
+    public Map<Vector2, ArrayList<Vector2>> getTakingTargetPos(Map<Vector2, ArrayList<Vector2>> validMoves) {
+        Map<Vector2, ArrayList<Vector2>> takingMoves = new HashMap<>();
+        ArrayList<Vector2> v;
         for (Vector2 k :
                 validMoves.keySet()) {
-            if (validMoves.get(k) != null)
-                takingMoves.put(k, validMoves.get(k));
+            v = validMoves.get(k);
+            if (v != null && !v.isEmpty())
+                takingMoves.put(k, v);
         }
         return takingMoves;
     }
 
-    public Map<Vector2, Vector2> getValidMoves(boolean all) {
+    public Map<Vector2, ArrayList<Vector2>> getValidMoves(boolean all) {
         return getValidMovesFrom(selectedPiece.posOnBoard, new ArrayList<>(), all);
     }
 
-    public ArrayList<Vector2> getAllTakingPos(){
+    public Map<Vector2, ArrayList<Vector2>> getValidMovesOff(Piece off, boolean all) {
+        return getValidMovesFromOff(off.posOnBoard, off.type, off.isKing, new ArrayList<>(), all);
+    }
+
+    private Map<Vector2, ArrayList<Vector2>> getValidMovesFrom(Vector2 from, ArrayList<Vector2> takenPos, boolean all) {
+        return getValidMovesFromOff(from, selectedPiece.type, selectedPiece.isKing, takenPos, all);
+    }
+
+    /**
+     * Get all the positions from which a piece can be taken
+     * @return a list of position
+     */
+    public ArrayList<Vector2> getAllTakingOriginPos(){
         ArrayList<Vector2> allTakingPos = new ArrayList<>();
         if (selectedPiece == null || currentPlayer.color != selectedPiece.type) return allTakingPos;
         for (Piece p :
                 currentPlayer.getPieces()) {
-            if (!getTakingMoves(getValidMovesFrom(p.posOnBoard, new ArrayList<>(), false)).isEmpty())
+            if (!getTakingTargetPos(getValidMovesOff(p, false)).isEmpty())
                 allTakingPos.add(p.posOnBoard);
         }
         return allTakingPos;
     }
 
     public void markValidMoves() {
-        Map<Vector2, Vector2> validMoves = getValidMoves(true);
+//        Map<Vector2, ArrayList<Vector2>> validMoves = getValidMoves(true);
         for (Vector2 pos :
-                validMoves.keySet()) {
+                getValidMoves(true).keySet()) {
             getTileAt(pos).setMarked(true);
         }
     }
 
     public void unMarkValidMoves() {
-        Map<Vector2, Vector2> validMoves = getValidMoves(true);
+//        Map<Vector2, ArrayList<Vector2>> validMoves = getValidMoves(true);
         for (Vector2 pos :
-                validMoves.keySet()) {
+                getValidMoves(true).keySet()) {
             getTileAt(pos).setMarked(false);
         }
     }
 
     public void moveSelectedPieceTo(float x, float y) {
-        Map<Vector2, Vector2> validMoves = getValidMoves(false);
-        Vector2 pos = validMoves.get(new Vector2(x, y));
+        Map<Vector2, ArrayList<Vector2>> validMoves = getValidMoves(false);
+        ArrayList<Vector2> takenPos = validMoves.get(new Vector2(x, y));
         Piece takenPiece = null;
-        if (pos != null) {
-            takenPiece = getPieceAt(pos);
-            currentPlayer.takePiece(takenPiece);
-            getOtherPlayer().removePiece(takenPiece);
+        if (takenPos != null) {
+            for (Vector2 pos :
+                    takenPos) {
+                takenPiece = getPieceAt(pos);
+                currentPlayer.takePiece(takenPiece);
+                getOtherPlayer().removePiece(takenPiece);
+            }
         }
         selectedPiece.moveTo(x, y, 0.5f);
         selectedPiece.toFront();
 
-        // TODO Check if a can take another piece, if so, select this piece and oblige it to take that piece
-        if (takenPiece == null || getTakingMoves(getValidMoves(false)).isEmpty()){
+        if (takenPiece == null || getTakingTargetPos(getValidMoves(false)).isEmpty()){
             selectTarget = false;
             selectPiece = true;
             switchToNexPlayer();
