@@ -1,7 +1,6 @@
 package com.robotane.game.scrabbly.game.pieces;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -55,9 +54,9 @@ public class Tile extends BaseActor {
 
     public void updateTexture(){
         if (isMarked){
-            tileRegion = type==PieceType.WHITE? Assets.instance.boardTile.gray_light : Assets.instance.boardTile.gray_dark;
+            tileRegion = type==PieceType.LIGHT ? Assets.instance.boardTile.gray_light : Assets.instance.boardTile.gray_dark;
         }
-        else tileRegion = type==PieceType.WHITE? Assets.instance.boardTile.brown_light : Assets.instance.boardTile.brown_dark;
+        else tileRegion = type==PieceType.LIGHT ? Assets.instance.boardTile.brown_light : Assets.instance.boardTile.brown_dark;
 //        Gdx.app.log(TAG,tileRegion.toString());
         setAnimation(loadTextureRegion(tileRegion));
     }

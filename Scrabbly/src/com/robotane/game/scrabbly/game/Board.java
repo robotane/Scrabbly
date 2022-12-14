@@ -11,9 +11,7 @@ import com.robotane.game.scrabbly.game.pieces.PieceType;
 import com.robotane.game.scrabbly.game.pieces.Tile;
 import com.robotane.game.scrabbly.util.Constants;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Board extends BaseActor {
 
@@ -35,8 +33,8 @@ public class Board extends BaseActor {
     }
 
     public PieceType getTileColor(float row, float col) {
-        if ((int) col % 2 == (((int) row + 1) % 2)) return PieceType.BLACK;
-        return PieceType.WHITE;
+        if ((int) col % 2 == (((int) row + 1) % 2)) return PieceType.DARK;
+        return PieceType.LIGHT;
     }
 
     public Tile getTileAt(int x, int y) {
@@ -79,7 +77,7 @@ public class Board extends BaseActor {
         Piece pieceAt = getPieceAt(x, y);
         boolean isEmptyTile = pieceAt == null;
         boolean isOpponent = pieceAt != null && pieceAt.type != selectedPiece.type;
-        boolean isBlackTile = getTileColor(x, y) == PieceType.BLACK;
+        boolean isBlackTile = getTileColor(x, y) == PieceType.DARK;
         boolean isValidMove = getValidMoves(false).containsKey(new Vector2(x, y));
         return selectTarget && (isEmptyTile || isOpponent) && isBlackTile && isValidMove;
     }
@@ -89,9 +87,9 @@ public class Board extends BaseActor {
     }
 
     private boolean isValidMove(Piece piece, int fromX, int fromY, int toX, int toY) {
-        if (piece.type == PieceType.WHITE) {
+        if (piece.type == PieceType.LIGHT) {
             return (toX == fromX - 1 || toX == fromX + 1) && toY == fromY + 1;
-        } else if (piece.type == PieceType.BLACK) {
+        } else if (piece.type == PieceType.DARK) {
             return (toX == fromX - 1 || toX == fromX + 1) && toY == fromY - 1;
         }
         return false;
@@ -110,11 +108,11 @@ public class Board extends BaseActor {
     }
 
     private int getNextForward(PieceType type, int currentPos){
-        return type == PieceType.WHITE? currentPos + 1: currentPos - 1;
+        return type == PieceType.LIGHT ? currentPos + 1: currentPos - 1;
     }
 
     private int getNextBackward(PieceType type, int currentPos){
-        return type == PieceType.WHITE? currentPos - 1: currentPos + 1;
+        return type == PieceType.LIGHT ? currentPos - 1: currentPos + 1;
     }
 
     private int getNextLeft(PieceType type, int currentPos){
@@ -162,19 +160,19 @@ public class Board extends BaseActor {
         twoLeft = fromX - 2;
         twoRight = fromX + 2;
 
-        if (type == PieceType.WHITE) {
+        if (type == PieceType.LIGHT) {
             oneForward = fromY + 1;
             oneBackward = fromY - 1;
             twoForward = fromY + 2;
             twoBackward = fromY - 2;
-            opponentType = PieceType.BLACK;
+            opponentType = PieceType.DARK;
         }
         else {
             oneForward = fromY - 1;
             oneBackward = fromY + 1;
             twoForward = fromY - 2;
             twoBackward = fromY + 2;
-            opponentType = PieceType.WHITE;
+            opponentType = PieceType.LIGHT;
         }
 
         // FORWARD LEFT
@@ -190,15 +188,15 @@ public class Board extends BaseActor {
                         }
                         else {
                             if (getPieceAt(currentX, currentY).type == opponentType){
-                                nextX = getNextLeft(currentX);
-                                nextY = getNextForward(currentY);
+                                nextX = getNextLeft(type, currentX);
+                                nextY = getNextForward(type, currentY);
                                 if (kingTaking(takenPos, validMoves, currentX, nextX, currentY, nextY, takenPieces))
                                     break;
                             }
                             else break;
                         }
-                        currentX = getNextLeft(currentX);
-                        currentY = getNextForward(currentY);
+                        currentX = getNextLeft(type, currentX);
+                        currentY = getNextForward(type, currentY);
                     }
                 }
                 else if (takenPos.isEmpty())
@@ -221,15 +219,15 @@ public class Board extends BaseActor {
                         }
                         else {
                             if (getPieceAt(currentX, currentY).type == opponentType){
-                                nextX = getNextRight(currentX);
-                                nextY = getNextForward(currentY);
+                                nextX = getNextRight(type, currentX);
+                                nextY = getNextForward(type, currentY);
                                 if (kingTaking(takenPos, validMoves, currentX, nextX, currentY, nextY, takenPieces))
                                     break;
                             }
                             else break;
                         }
-                        currentX = getNextRight(currentX);
-                        currentY = getNextForward(currentY);
+                        currentX = getNextRight(type, currentX);
+                        currentY = getNextForward(type, currentY);
                     }
                 }
                 if (takenPos.isEmpty())
@@ -250,19 +248,20 @@ public class Board extends BaseActor {
                     }
                     else {
                         if (getPieceAt(currentX, currentY).type == opponentType) {
-                            nextX = getNextRight(currentX);
-                            nextY = getNextBackward(currentY);
+                            nextX = getNextRight(type, currentX);
+                            nextY = getNextBackward(type, currentY);
                             if (kingTaking(takenPos, validMoves, currentX, nextX, currentY, nextY, takenPieces))
                                 break;
                         }
                         else break;
                     }
-                    currentX = getNextRight(currentX);
-                    currentY = getNextBackward(currentY);
+                    currentX = getNextRight(type, currentX);
+                    currentY = getNextBackward(type, currentY);
                 }
             }
             else {
-                takingBackward(type, isKing, takenPos, all, validMoves, oneBackward, oneRight, twoBackward, twoRight, opponentType);
+                if (Constants.canTakeFromBack)
+                    takingBackward(type, isKing, takenPos, all, validMoves, oneBackward, oneRight, twoBackward, twoRight, opponentType);
             }
         }
 
@@ -278,19 +277,20 @@ public class Board extends BaseActor {
                     }
                     else {
                         if (getPieceAt(currentX, currentY).type == opponentType) {
-                            nextX = getNextLeft(currentX);
-                            nextY = getNextBackward(currentY);
+                            nextX = getNextLeft(type, currentX);
+                            nextY = getNextBackward(type, currentY);
                             if (kingTaking(takenPos, validMoves, currentX, nextX, currentY, nextY, takenPieces))
                                 break;
                         }
                         else break;
                     }
-                    currentX = getNextLeft(currentX);
-                    currentY = getNextBackward(currentY);
+                    currentX = getNextLeft(type, currentX);
+                    currentY = getNextBackward(type, currentY);
                 }
             }
             else
-                takingBackward(type, isKing, takenPos, all, validMoves, oneBackward, oneLeft, twoBackward, twoLeft, opponentType);
+                if (Constants.canTakeFromBack)
+                    takingBackward(type, isKing, takenPos, all, validMoves, oneBackward, oneLeft, twoBackward, twoLeft, opponentType);
         }
 
         Map<Vector2, ArrayList<Vector2>> takingMoves = getTakingTargetPos(validMoves);
@@ -332,7 +332,7 @@ public class Board extends BaseActor {
                     v.add(newTakenPos);
                     return v;
                 });
-                if ((type == PieceType.WHITE && newTargetPos.y == Constants.COLS - 1) || (type == PieceType.BLACK && newTargetPos.y == 0)) {
+                if ((type == PieceType.LIGHT && newTargetPos.y == Constants.COLS - 1) || (type == PieceType.DARK && newTargetPos.y == 0)) {
                     isKing = true;
                 }
                 if (all) validMoves.putAll(getValidMovesFromOff(newTargetPos, type, isKing, takenPos, all));
@@ -429,8 +429,8 @@ public class Board extends BaseActor {
     }
 
     private Player getOtherPlayer() {
-        if (currentPlayer == players[LIGHT_PLAYER]) return players[DARK_PLAYER];
-        return players[LIGHT_PLAYER];
+        if (currentPlayer == players[PieceType.LIGHT.ordinal()]) return players[PieceType.DARK.ordinal()];
+        return players[PieceType.LIGHT.ordinal()];
 //        return players.get((players.idOf(currentPlayer) + 1) % players.size());
     }
 
@@ -448,9 +448,9 @@ public class Board extends BaseActor {
         selectPiece = true;
         showMoves = true;
         players = new Player[2];
-        players[LIGHT_PLAYER] = new Player("John", PieceType.WHITE, this);
-        players[DARK_PLAYER] = new Player("Smith", PieceType.BLACK, this);
-        currentPlayer = players[LIGHT_PLAYER];
+        players[PieceType.LIGHT.ordinal()] = new Player("John", PieceType.LIGHT, this);
+        players[PieceType.DARK.ordinal()] = new Player("Smith", PieceType.DARK, this);
+        currentPlayer = players[PieceType.LIGHT.ordinal()];
         pieces = new Piece[Constants.ROWS][Constants.COLS];
         tiles = new Tile[Constants.ROWS][Constants.COLS];
         Tile tile;
@@ -459,17 +459,17 @@ public class Board extends BaseActor {
             for (int col = 0; col < Constants.COLS; col++) {
                 piece = null;
                 if (col % 2 == ((row + 1) % 2)) {
-                    tile = new Tile(col, row, getStage(), PieceType.BLACK, this);
+                    tile = new Tile(col, row, getStage(), PieceType.DARK, this);
                     if (row < 3) {
-                        piece = new Piece(col, row, getStage(), PieceType.WHITE, this);
-                        players[LIGHT_PLAYER].addPiece(piece);
+                        piece = new Piece(col, row, getStage(), PieceType.LIGHT, this);
+                        players[PieceType.LIGHT.ordinal()].addPiece(piece);
                     }
                     else if (row>4){
-                        piece = new Piece(col, row, getStage(), PieceType.BLACK, this);
-                        players[DARK_PLAYER].addPiece(piece);
+                        piece = new Piece(col, row, getStage(), PieceType.DARK, this);
+                        players[PieceType.DARK.ordinal()].addPiece(piece);
                     }
                 } else {
-                    tile = new Tile(col, row, getStage(), PieceType.WHITE, this);
+                    tile = new Tile(col, row, getStage(), PieceType.LIGHT, this);
                 }
 
                 tiles[col][row] = tile;

@@ -69,7 +69,7 @@ public class Piece extends BaseActor {
         posOnBoard.x = x;
         posOnBoard.y = y;
         board.pieces[(int)posOnBoard.x][(int)posOnBoard.y] = this;
-        if ((type == PieceType.WHITE && y == Constants.COLS - 1) || (type == PieceType.BLACK && y == 0)) {
+        if ((type == PieceType.LIGHT && y == Constants.COLS - 1) || (type == PieceType.DARK && y == 0)) {
             setKing(true);
         }
     }
@@ -98,13 +98,13 @@ public class Piece extends BaseActor {
 
     public void updateTexture(){
         normalAnimation = loadTextureRegion(
-                isKing ? (type == PieceType.WHITE? Assets.instance.piece.white_alt:Assets.instance.piece.orange_alt)
-                        :(type == PieceType.WHITE? Assets.instance.piece.white:Assets.instance.piece.orange)
+                isKing ? (type == PieceType.LIGHT ? Assets.instance.piece.white_alt:Assets.instance.piece.orange_alt)
+                        :(type == PieceType.LIGHT ? Assets.instance.piece.white:Assets.instance.piece.orange)
         );
 
         selectedAnimation = loadTextureRegion(
-                isKing ? (type == PieceType.WHITE? Assets.instance.piece.purple_alt:Assets.instance.piece.yellow_alt)
-                        :(type == PieceType.WHITE? Assets.instance.piece.purple:Assets.instance.piece.yellow)
+                isKing ? (type == PieceType.LIGHT ? Assets.instance.piece.purple_alt:Assets.instance.piece.yellow_alt)
+                        :(type == PieceType.LIGHT ? Assets.instance.piece.purple:Assets.instance.piece.yellow)
         );
        setAnimation();
     }
@@ -138,9 +138,9 @@ public class Piece extends BaseActor {
                         if (board.showMoves && board.currentPlayer.color == board.selectedPiece.type)
                             board.markValidMoves();
                     }
-                Gdx.app.log(TAG, board.selectedPiece.type.name());
-                Gdx.app.log(TAG, allTakingMoves.toString());
-                Gdx.app.log(TAG, Boolean.toString(canBeSelected));
+//                Gdx.app.log(TAG, board.selectedPiece.type.name());
+//                Gdx.app.log(TAG, allTakingMoves.toString());
+//                Gdx.app.log(TAG, Boolean.toString(canBeSelected));
                 }
 
                 return false;

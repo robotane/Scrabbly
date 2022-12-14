@@ -16,6 +16,7 @@ public class Constants {
 
 	public static final int COLS = 8;
 
+	public static boolean canTakeFromBack = true;
 
 
 	// GUI Width
